@@ -1,0 +1,66 @@
+name: 21f-pa03-kyle-ariyan
+
+on: [push]
+
+env:
+  EXE_NAME: 21f_pa03_kyle_ariyan
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    name: Project_Building
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+
+    steps:
+
+      - name: Checkout project repo from GitHub
+        uses: actions/checkout@v1
+
+      - name: Executable name Environment Variable Check
+        run: |
+          echo $EXE_NAME
+          echo " "
+          echo ${{runner.workspace}}
+          echo " "
+          echo $GITHUB_WORKSPACE
+          echo " "
+          g++ --version
+          cmake --version
+
+      - name: Create build environment
+
+        run:  mkdir ${{runner.workspace}}/build
+
+      - name: Configure the build
+
+        shell: bash
+        working-directory: ${{runner.workspace}}/build
+        run: cmake $GITHUB_WORKSPACE -DCMAKE_BUILD_TYPE=$BUILD_TYPE
+
+      - name: Build the project
+        working-directory: ${{runner.workspace}}/build
+        shell: bash
+
+        run: cmake --build . --config $BUILD_TYPE
+
+      - name: Run the project
+        working-directory: ${{runner.workspace}}/build
+        shell: bash
+        run: ./$EXE_NAME $INPUT_FILES $OUTPUT_FILES
+
+
+      - name: Copy output files to artifact directory
+        working-directory: ${{runner.workspace}}/build
+        run: |
+          mkdir artifacts
+          for f in $OUTPUT_FILES
+          do
+            echo "  Copying $f"
+            cp $f artifacts/
+          done
+      - name: Upload output files to GitHub
+        uses: actions/upload-artifact@v1
+        with:
+          name: graphOutput
+          path: ${{runner.workspace}}/build/artifacts
